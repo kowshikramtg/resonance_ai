@@ -14,7 +14,7 @@ api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
 # Primary & Fallback LLMs
 primary_llm = ChatGoogleGenerativeAI(
-    model="gemini-3.7-flash", 
+    model="gemini-3.6-flash", 
     google_api_key=api_key, 
     temperature=0.2
 )

@@ -7,14 +7,20 @@ import type {
   ResearchPaper,
 } from '../types';
 
-const API_BASE = 'http://localhost:8000/api/research';
+const API_BASE = 'http://127.0.0.1:8000/api';
 
 export const analyzeIdeology = async (payload: {
   raw_ideology: string;
   problem_statement: string;
   proposed_approach?: string;
 }): Promise<AnalysisResponse> => {
-  const res = await axios.post(`${API_BASE}/analyze`, payload);
+  // Pass the payload directly with key names expected by FastAPI
+  const res = await axios.post(`${API_BASE}/research/analyze`, {
+    raw_ideology: payload.raw_ideology,
+    target_problem: payload.problem_statement,
+    proposed_method: payload.proposed_approach || '',
+  });
+
   return res.data;
 };
 

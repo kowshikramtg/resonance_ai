@@ -1,60 +1,84 @@
 import httpx
-from typing import List, Dict, Any, Optional
+from typing import List
 from app.schemas.research import ResearchPaperMetadata
 
-class ScholarlySearchService:
-    def __init__(self, mailto_email: str = "user@example.com"):
-        self.headers = {"User-Agent": f"ResearchPlatform/1.0 (mailto:{mailto_email})"}
-    
-    async def search_openalex(self, query: str, limit: int = 5) -> List[ResearchPaperMetadata]:
-        url = "https://api.openalex.org/works"
-        params = {
-            "search": query,
-            "per-page": limit,
-            "select": "id,title,publication_year,primary_location,authorships,cited_by_count,abstract_inverted_index"
-        }
-        async with httpx.AsyncClient() as client:
+OPENALEX_BASE = "https://api.openalex.org/works"
+
+async def fetch_real_papers(queries: List[str], max_results: int = 6) -> List[ResearchPaperMetadata]:
+    papers = []
+    seen_ids = set()
+
+    async with httpx.AsyncClient(timeout=12.0) as client:
+        for query in queries:
+            if len(papers) >= max_results:
+                break
+            
+            clean_q = query.replace("\n", " ").strip()
+            if not clean_q:
+                continue
+
+            params = {
+                "search": clean_q,
+                "per_page": 4,
+                "sort": "cited_by_count:desc"
+            }
+            
             try:
-                res = await client.get(url, params=params, headers=self.headers, timeout=10.0)
-                res.raise_for_status()
-                data = res.json()
-                results = []
-                for item in data.get("results", []):
-                    # Basic reconstruction of abstract from inverted index
-                    abstract = self._reconstruct_abstract(item.get("abstract_inverted_index"))
-                    
-                    authors = [
-                        auth.get("author", {}).get("display_name", "") 
-                        for auth in item.get("authorships", [])
-                    ]
-                    
-                    location = item.get("primary_location") or {}
-                    landing_page = location.get("landing_page_url")
-                    
-                    results.append(
-                        ResearchPaperMetadata(
-                            paper_id=item.get("id"),
-                            title=item.get("title", "Untitled"),
-                            authors=[a for a in authors if a],
+                res = await client.get(OPENALEX_BASE, params=params)
+                if res.status_code == 200:
+                    data = res.json()
+                    for item in data.get("results", []):
+                        if not item or not isinstance(item, dict):
+                            continue
+
+                        paper_id = str(item.get("id", "")).replace("https://openalex.org/", "")
+                        if not paper_id or paper_id in seen_ids:
+                            continue
+
+                        # Null-safe author extraction
+                        authorships = item.get("authorships") or []
+                        authors = []
+                        for a in authorships[:3]:
+                            if isinstance(a, dict):
+                                author_obj = a.get("author") or {}
+                                name = author_obj.get("display_name") if isinstance(author_obj, dict) else None
+                                if name:
+                                    authors.append(name)
+                        
+                        # Abstract reconstruction
+                        abstract_text = ""
+                        inv_index = item.get("abstract_inverted_index")
+                        if isinstance(inv_index, dict):
+                            word_positions = []
+                            for word, positions in inv_index.items():
+                                if isinstance(positions, list):
+                                    for pos in positions:
+                                        word_positions.append((pos, word))
+                            word_positions.sort(key=lambda x: x[0])
+                            abstract_text = " ".join([wp[1] for wp in word_positions])[:350] + "..."
+
+                        # Null-safe venue extraction
+                        primary_loc = item.get("primary_location") or {}
+                        source = primary_loc.get("source") if isinstance(primary_loc, dict) else {}
+                        venue_name = source.get("display_name") if isinstance(source, dict) else "Academic Source"
+
+                        raw_url = item.get("doi") or item.get("id")
+                        
+                        paper = ResearchPaperMetadata(
+                            paper_id=paper_id,
+                            title=item.get("title") or "Untitled Paper",
+                            authors=authors if authors else ["Unknown Author"],
                             year=item.get("publication_year"),
-                            venue=location.get("source", {}).get("display_name") if location.get("source") else None,
-                            url=landing_page if landing_page else None,
+                            venue=str(venue_name or "Academic Source"),
+                            url=raw_url if (raw_url and str(raw_url).startswith("http")) else None,
                             citation_count=item.get("cited_by_count", 0),
-                            abstract=abstract,
+                            abstract=abstract_text if abstract_text else "Abstract unavailable.",
                             is_user_uploaded=False
                         )
-                    )
-                return results
+                        
+                        seen_ids.add(paper_id)
+                        papers.append(paper)
             except Exception as e:
-                print(f"Error fetching from OpenAlex: {e}")
-                return []
-
-    def _reconstruct_abstract(self, inverted_index: Optional[Dict[str, List[int]]]) -> Optional[str]:
-        if not inverted_index:
-            return None
-        word_positions = []
-        for word, positions in inverted_index.items():
-            for pos in positions:
-                word_positions.append((pos, word))
-        word_positions.sort()
-        return " ".join([w for _, w in word_positions])
+                print(f"[OpenAlex Search Error]: {e}")
+                
+    return papers

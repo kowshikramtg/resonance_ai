@@ -1,10 +1,14 @@
 import os
-from typing import Dict, Any, List
-from langchain_google_genai import ChatGoogleGenerativeAI
-from app.schemas.research import PaperSection, SectionClaim
+import json
+import re
+from typing import Dict, List, Any
+from google import genai
+from google.genai import types
 
-api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-llm = ChatGoogleGenerativeAI(model="gemini-3.7-flash", google_api_key=api_key, temperature=0.2)
+def clean_json_text(raw_text: str) -> str:
+    cleaned = re.sub(r"```(?:json)?", "", raw_text, flags=re.IGNORECASE).strip()
+    return cleaned.strip("`").strip()
+
 
 async def generate_paper_section(
     section_name: str,
@@ -12,60 +16,84 @@ async def generate_paper_section(
     papers: List[Dict[str, Any]],
     gaps: List[Dict[str, Any]],
     custom_instructions: str = ""
-) -> PaperSection:
+) -> Dict[str, str]:
+    print(f"🚀 [Manuscript Engine] Starting generation for section: '{section_name}'...")
     
-    paper_context = "\n".join([
-        f"- [{p['paper_id']}] Title: {p['title']} | Abstract: {(p.get('abstract') or '')[:200]}"
-        for p in papers[:5]
-    ])
-    
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    client = genai.Client(api_key=api_key)
+
+    paper_titles = [
+        p.get("title", "") if isinstance(p, dict) else getattr(p, "title", "")
+        for p in papers
+    ]
+    gap_descriptions = [
+        g.get("description", "") if isinstance(g, dict) else getattr(g, "description", "")
+        for g in gaps
+    ]
+
     prompt = f"""
-    You are an academic paper engineer writing the '{section_name.upper()}' section of a research paper.
-    
-    CORE RESEARCH DNA:
-    Problem: {dna.get('core_problem')}
-    Solution: {dna.get('proposed_solution')}
-    Innovations: {dna.get('key_innovations')}
-    
-    LITERATURE CONTEXT:
-    {paper_context}
-    
-    IDENTIFIED GAPS:
-    {gaps}
-    
-    INSTRUCTIONS:
-    - Write professional, dense academic prose appropriate for IEEE/ACM formats.
-    - Attach paper IDs as citations (e.g., [https://openalex.org/W...]) when citing claims.
-    - If empirical results, specific dataset metrics, or baselines are missing, DO NOT FABRICATE DATA. Instead, insert explicit placeholders like '[PLACEHOLDER: Empirical accuracy metric on dataset X]'.
-    - Custom User Direction: {custom_instructions}
+    You are an expert AI computer science research assistant drafting an academic paper section.
+
+    Section to Draft: {section_name.upper()}
+    Core Problem: {dna.get('core_problem', 'N/A')}
+    Proposed Solution: {dna.get('proposed_solution', 'N/A')}
+    Key Innovations: {', '.join(dna.get('key_innovations', []))}
+    Related Literature Found: {', '.join(paper_titles[:5])}
+    Target Research Gaps: {', '.join(gap_descriptions[:3])}
+    Custom Instructions: {custom_instructions}
+
+    Write a detailed, formal academic section (300-500 words).
+
+    Return ONLY strict JSON matching:
+    {{
+        "section_name": "{section_name}",
+        "content": "Full markdown text here..."
+    }}
     """
-    
-    structured_llm = llm.with_structured_output(PaperSection, method="json_schema")
-    return await structured_llm.ainvoke(prompt)
+
+    try:
+        print(f"📡 [Gemini Call] Sending prompt for '{section_name}' to gemini-3.6-flash...")
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(response_mime_type="application/json")
+        )
+        cleaned_text = clean_json_text(response.text)
+        data = json.loads(cleaned_text)
+        print(f"✅ [Manuscript Engine] Completed drafting '{section_name}'.")
+        
+        return {
+            "section_name": section_name,
+            "content": data.get("content", f"Draft content for {section_name}.")
+        }
+    except Exception as e:
+        print(f"❌ [Paper Generation Error - {section_name}]: {e}")
+        sec_title = section_name.replace("_", " ").title()
+        return {
+            "section_name": section_name,
+            "content": f"## {sec_title}\n\nDraft generated for **{dna.get('proposed_solution', 'the proposed framework')}** addressing {dna.get('core_problem', 'the core research problem')}."
+        }
 
 
-def format_to_latex(title: str, authors: List[str], sections: Dict[str, str], references: List[Dict[str, Any]]) -> str:
-    """Exports structured paper dict into clean LaTeX document format."""
+def format_to_latex(
+    title: str,
+    authors: List[str],
+    sections: Dict[str, str],
+    references: List[Dict[str, Any]]
+) -> str:
     author_str = " \\and ".join(authors) if authors else "Author Name"
-    
-    latex_doc = [
-        "\\documentclass[10pt,journal,compsoc]{IEEEtran}",
-        "\\usepackage{cite}",
-        "\\usepackage{amsmath,amssymb,amsfonts}",
-        "\\begin{document}",
+    latex_lines = [
+        "\\documentclass{article}",
+        "\\usepackage[utf8]{inputenc}",
         f"\\title{{{title}}}",
         f"\\author{{{author_str}}}",
-        "\\maketitle",
+        "\\date{\\today}",
+        "\\begin{document}",
+        "\\maketitle"
     ]
-    
-    if "abstract" in sections:
-        latex_doc.append(f"\\begin{{abstract}}\n{sections['abstract']}\n\\end{{abstract}}")
-        
-    for sec_name, content in sections.items():
-        if sec_name.lower() == "abstract":
-            continue
-        formatted_title = sec_name.replace("_", " ").title()
-        latex_doc.append(f"\\section{{{formatted_title}}}\n{content}\n")
-        
-    latex_doc.append("\\end{document}")
-    return "\n".join(latex_doc)
+    for sec_key, content in sections.items():
+        sec_heading = sec_key.replace("_", " ").title()
+        latex_lines.append(f"\n\\section{{{sec_heading}}}")
+        latex_lines.append(content.replace("**", "").replace("## ", ""))
+    latex_lines.append("\n\\end{document}")
+    return "\n".join(latex_lines)
