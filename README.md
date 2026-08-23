@@ -18,12 +18,17 @@
 </div>
 
 ---
+<img width="1860" height="960" alt="image" src="https://github.com/user-attachments/assets/b3b5aef5-829d-4bf9-ab28-aa2d21a08701" />
+
+---
 
 ## Overview
 
-**Resonance AI** is an end-to-end research intelligence platform designed to streamline the academic workflow from raw ideology to published manuscript.
+**Resonance AI** is an end-to-end research intelligence platform that transforms raw research ideas into structured insights and academic manuscripts. Built primarily as an Agentic Generative AI system, it combines LLM-based reasoning, retrieval-augmented generation (RAG), and scholarly literature retrieval through OpenAlex.
 
-Powered by agentic LLM graphs and dynamic academic index integrations such as **OpenAlex**, Resonance AI extracts core **Research DNA**, identifies literature gaps, cross-references citations, and drafts section-by-section academic papers in both **Markdown** and **LaTeX** formats.
+Orchestrated with LangGraph, Resonance AI follows a multi-stage research workflow: understanding the research problem, extracting Research DNA, discovering and analyzing relevant literature, identifying research gaps and novelty opportunities, and generating context-aware academic manuscripts in **Markdown** and **LaTeX**.
+
+The architecture separates research intelligence from manuscript generation, using specialized LLM stages to ground generated content in retrieved academic literature rather than relying solely on model knowledge.
 
 ---
 
