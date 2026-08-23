@@ -2,6 +2,11 @@ from http.client import HTTPException
 from app.schemas.paper_gen import GenerateSectionRequest, PaperExportRequest
 from app.services.paper_engine import generate_paper_section, format_to_latex
 from fastapi.responses import PlainTextResponse
+from fastapi import APIRouter, HTTPException
+# Import your schemas or services here
+# from app.schemas.research import ...
+
+router = APIRouter()
 
 @router.post("/paper/generate-section")
 async def generate_section(payload: GenerateSectionRequest):

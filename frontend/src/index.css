@@ -1,0 +1,152 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    font-family: "IBM Plex Sans", sans-serif;
+    color: #17202a;
+    background: #fbfaf7;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    background: #fbfaf7;
+  }
+
+  .font-serif {
+    font-family: "DM Serif Display", Georgia, serif;
+  }
+
+  .font-mono {
+    font-family: "IBM Plex Mono", monospace;
+  }
+}
+
+.bg-mesh-light {
+  background-color: #fbfaf7;
+  background-image:
+    linear-gradient(rgba(23, 32, 42, 0.025) 1px, transparent 1px),
+    radial-gradient(
+      circle at 8% 6%,
+      rgba(218, 211, 250, 0.72),
+      transparent 24%
+    ),
+    radial-gradient(
+      circle at 92% 15%,
+      rgba(255, 220, 198, 0.6),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 14% 88%,
+      rgba(197, 224, 244, 0.55),
+      transparent 22%
+    );
+  background-size:
+    100% 72px,
+    auto,
+    auto,
+    auto;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+}
+
+.bg-mesh-dark {
+  background-color: #10141d;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(circle at 8% 6%, rgba(79, 67, 137, 0.32), transparent 25%),
+    radial-gradient(
+      circle at 92% 15%,
+      rgba(137, 72, 55, 0.24),
+      transparent 23%
+    ),
+    radial-gradient(circle at 14% 88%, rgba(47, 84, 124, 0.3), transparent 23%);
+  background-size:
+    100% 72px,
+    auto,
+    auto,
+    auto;
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+}
+
+.studio-card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d8d6cf;
+  box-shadow: 0 18px 44px -28px rgba(23, 32, 42, 0.45);
+  border-radius: 0.5rem;
+}
+
+.dark .studio-card {
+  background: rgba(25, 31, 43, 0.94);
+  border-color: #354052;
+  box-shadow: 0 18px 44px -28px rgba(0, 0, 0, 0.7);
+}
+
+.studio-textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 0.35rem;
+  border: 1px solid #c8c9c5;
+  background-color: rgba(251, 251, 249, 0.78);
+  color: #17202a;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s ease;
+  resize: vertical;
+}
+
+.studio-textarea:focus {
+  border-color: #527caf;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(82, 124, 175, 0.18);
+}
+
+.studio-textarea::placeholder {
+  color: #68717c;
+  opacity: 1;
+}
+
+.dark .studio-textarea {
+  border-color: #465267;
+  background-color: #171d28;
+  color: #f3f5f8;
+}
+
+.dark .studio-textarea:focus {
+  border-color: #92b8e2;
+  background-color: #1b2330;
+  box-shadow: 0 0 0 3px rgba(146, 184, 226, 0.18);
+}
+
+.dark .studio-textarea::placeholder {
+  color: #aeb8c7;
+  opacity: 1;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #d8d6cf;
+  border-radius: 0.5rem;
+  box-shadow: 0 22px 50px -32px rgba(23, 32, 42, 0.5);
+}
+
+.dark .glass-card {
+  background: rgba(22, 28, 40, 0.94);
+  border-color: #354052;
+  box-shadow: 0 22px 50px -32px rgba(0, 0, 0, 0.75);
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid rgba(146, 184, 226, 0.55);
+  outline-offset: 3px;
+}

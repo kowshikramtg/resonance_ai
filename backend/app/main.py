@@ -26,9 +26,8 @@ def startup():
     init_db()
 
 
-app.include_router(research_router)
+app.include_router(research_router, prefix="/api")
 
-
-@app.get("/health")
-def health_check():
-    return {"status": "online", "service": "Research Intelligence Platform"}
+@app.get("/")
+def read_root():
+    return {"status": "Resonance AI API running"}
