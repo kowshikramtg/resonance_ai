@@ -110,11 +110,11 @@ Resonance AI operates on a decoupled backend architecture utilizing **LangGraph*
 
 - **Core**: React 18, TypeScript, Vite
 - **Icons & Styling**: Tailwind CSS, Lucide React (`lucide-react`)
-- **HTTP Client**: Native Fetch API / Axios
+- **HTTP Client**: Axios
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -293,7 +293,7 @@ This stage focuses on high-quality academic writing, contextual consistency, str
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 resonance-ai/
@@ -370,7 +370,7 @@ This separation allows the system to optimize for both **latency** and **generat
 
 ---
 
-## 🧪 Example Research Input
+## Example Research Input
 
 ```text
 Research Idea:
@@ -401,7 +401,7 @@ Academic Manuscript
 
 ---
 
-## 📄 Output Formats
+## Output Formats
 
 Resonance AI supports:
 
@@ -431,7 +431,7 @@ AI-generated references and claims should always be independently verified again
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome.
 
@@ -451,27 +451,7 @@ git push origin feature/your-feature
 
 ---
 
-## 🗺️ Roadmap
-
-- [x] Research DNA extraction
-- [x] OpenAlex literature discovery
-- [x] Research gap analysis
-- [x] Novelty mapping
-- [x] Modular manuscript generation
-- [x] Markdown export
-- [x] LaTeX export
-- [ ] Citation graph visualization
-- [ ] Multi-agent peer review
-- [ ] Automated citation verification
-- [ ] Research quality scoring
-- [ ] Semantic literature clustering
-- [ ] Long-term research memory
-- [ ] Multi-model routing
-- [ ] Autonomous research planning
-
----
-
-## 📜 License
+## License
 
 Distributed under the MIT License.
 
